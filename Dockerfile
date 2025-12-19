@@ -1,27 +1,10 @@
-# Kontener z mavenem, który umożliwi zbudowanie aplikacji
-FROM maven:3.8.8-eclipse-temurin-17 AS build
-
-# Ustawianie workdira w kontenerze
+FROM maven:3.8-openjdk-17 AS build
 WORKDIR /app
-
-# Kopiowanie poma i plików projektu do kontenera
-COPY pom.xml .
-COPY src ./src
-
-# Budowanie aplikacji (dla naszych celów możemy pominąć testy)
+COPY . .
 RUN mvn clean package -DskipTests
 
-# Wybranie lekkiego kontenera linuxowego z openjdk17
-FROM eclipse-temurin:17-jdk-jammy
-
-# Ustawianie workdira w kontenerze
+FROM openjdk:17-jdk-slim
 WORKDIR /app
-
-# Skopiowanie zbudowanej jarki z kontenera budującego do kontenera uruchamiającego aplikację
-COPY --from=build /app/target/demoDockerCompose-0.0.1-SNAPSHOT.jar /app/demoWeb.jar
-
-# Wystawienie portu 8080
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-# Uruchomienie aplikacji przy starcie kontenera
-ENTRYPOINT ["java", "-jar", "/app/demoWeb.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
